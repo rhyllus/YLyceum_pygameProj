@@ -1,0 +1,1 @@
+Файлы objects.py и enemies.py не задействованы 
