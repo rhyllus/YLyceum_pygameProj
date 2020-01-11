@@ -1,1 +1,1 @@
-Файл objects.py и enemies.py не задействованы 
+Файлы objects.py и enemies.py не задействованы 
