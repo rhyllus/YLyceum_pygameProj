@@ -14,9 +14,9 @@ class Goomba(Sprite):
         self.name = 'g'
         self.vel_y = 0
         self.vel_x = 0
-        self.image = Surface((35, 35))
+        self.image = Surface((40, 40))
         self.image.fill(Color('Brown'))
-        self.rect = Rect(x, y, 35, 35)
+        self.rect = Rect(x, y, 40, 40)
 
     def update(self):
         if self.state == 'falling' and self.last_state == 'left':
@@ -89,16 +89,19 @@ class KoopaTroopa(Goomba):
         self.rect.x += self.vel_x
         self.collision(self.vel_x, 0, platforms)
 
-    def entity_collision(self, vel_x, entities):
+    def entity_collision(self, vel_x, entities, score):
         for p in entities:
             if sprite.collide_rect(self, p):
                 if vel_x > 0 and p.vel_y in (0, 0.5, 1):
                     if p.type == 'deadly':
                         p.type = 'dead'
+                        score += 100
                     else:
                         pass
                 if vel_x < 0 and p.vel_y in (0, 0.5, 1):
                     if p.type == 'deadly':
                         p.type = 'dead'
+                        score += 100
                     else:
                         pass
+        return score

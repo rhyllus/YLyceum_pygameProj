@@ -4,7 +4,7 @@ from objects import CoinBox, MovingPlatform
 from enemies import Goomba, KoopaTroopa
 
 size_w = (640, 480)
-size_lv = (2800, 2800)
+size_lv = (9000, 480)
 window = pygame.display.set_mode(size_w)
 screen = pygame.Surface(size_lv)
 running = True
@@ -19,10 +19,10 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, tile=None):
         pygame.sprite.Sprite.__init__(self)
         if tile is not None:
-            self.image = pygame.image.load(tile)
+            self.image = pygame.image.load(tile).convert()
+            self.image = pygame.transform.scale(self.image, (40, 40))
         else:
             self.image = pygame.Surface((40, 40))
-            self.image.fill((210, 120, 60))
         self.rect = pygame.Rect(x, y, 40, 40)
 
 
@@ -32,8 +32,8 @@ def build_stage(level):
     y = 0
     for i in level:
         for j in i:
-            if j == '1':
-                pl = Platform(x, y)
+            if j in ('1', '2', '3', '4', '5', '6', '7'):
+                pl = Platform(x, y, 'sprites/tile{}.png'.format(j))
                 objects.append((pl, '1'))
                 entities.add(pl)
             elif j == 's':
@@ -60,39 +60,38 @@ def build_stage(level):
                 camera_border_x_left = x
             elif j == 'y':
                 camera_border_y_down = y
-
+            elif j == '/':
+                pl = Platform(x, y)
+                objects.append((pl, '/', 1))
+            elif j == 'b':
+                pl = Platform(x, y)
+                objects.append((pl, '0', 1))
             x += 40
         y += 40
         x = 0
 
 
-def platform_update(objs):
+def load_level(filename):
+    filename = 'levels/' + filename
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+    max_width = max(map(len, level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+def obj_update(objs):
     for obj in objs:
-        if obj[1] == 'p':
-            obj[0].update()
+        if obj[1] in ('p', 's'):
+            if obj[1] == 's' and objs[objs.index(obj)]:
+                obj[0].update(obj[2])
+            else:
+                obj[0].update()
     return objs
 
 
 objects = []
 enemies = []
-level = ['1111111111111111111111111111111111....111111111111',
-         '1111111111111111111111111111111111....111111111111',
-         '111111....................................11111111',
-         '111111............................p.......11111111',
-         '111111....................................11111111',
-         '111111....................................11111111',
-         '111111...111111111................p.......11111111',
-         '111111....................................11111111',
-         '111111....................................11111111',
-         '111111..11..........11111111111...p.......11111111',
-         '111111.................k.....g............11111111',
-         '111111....................................11111111',
-         '1111111111111111111111111111111111p...111111111111',
-         '1111111111111111111111111111111111....111111111111',
-         '1111111111111111111111111111111111....111111111111',
-         '1111111111111111111111111111111111p...111111111111',
-         '1111111111111111111111111111111111....111111111111'
-         ]
+level = load_level('1-1.txt')
 
 player = Player(440, 440)
 entities = pygame.sprite.Group()
@@ -117,38 +116,49 @@ while running:
                 if event.key == 304:
                     run = True
                 if event.key == pygame.K_UP:
-                    if abs(player.vel_y) in [0, 0.5, 1]:
-                        player.vel_y -= 12
+                    if abs(player.vel_y) in (0, 0.5, 1):
+                        player.vel_y -= 14
                         player.on_ground = False
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    left = False
-                if event.key == pygame.K_RIGHT:
-                    right = False
-                if event.key == 304:
-                    run = False
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_UP:
+                if abs(player.vel_y) not in (0, 0.5, 1):
+                    if player.vel_y <= 0:
+                        player.vel_y = -2
+            if event.key == pygame.K_LEFT:
+                left = False
+            if event.key == pygame.K_RIGHT:
+                right = False
+            if event.key == 304:
+                run = False
     screen.fill((107, 140, 255))
-    objects = platform_update(objects)
     for enemy in enemies:
         if enemy.type == 'dead':
             entities.remove(enemy)
-        else:
+        elif abs(abs(enemy.rect.x) - abs(player.rect.x)) < 400:
             enemy.move(objects)
             if enemy.type == 'mv':
-                enemy.entity_collision(enemy.vel_x, enemies)
-    entities.draw(screen)
+                score = enemy.entity_collision(enemy.vel_x, enemies, score)
     if player.state == 'dead':
-        player.death_animation()
+        if player.death_animation():
+            enemies.clear()
+            score = 0
+            entities = pygame.sprite.Group()
+            objects.clear()
+            player = Player(440, 440)
+            entities.add(player)
+            build_stage(level)
     else:
         objects, score, camera = player.move(objects, score, enemies)
         player.update(left, right, run)
+    objects = obj_update(objects)
+    entities.draw(screen)
     text_str = 'Score: {}'.format(score)
     text = font.render(text_str, 1, (0, 0, 0))
     if player.state != 'dead':
-        text_x = player.rect.x + 150 - len(str(score)) * 10
-        text_y = player.rect.y - 230
+        text_x = -camera[0] + 465
+        text_y = 10
     screen.blit(text, (text_x, text_y))
-    window.blit(screen, camera)
+    window.blit(screen, (camera[0], 0))
     clock.tick(60)
     pygame.display.flip()
 

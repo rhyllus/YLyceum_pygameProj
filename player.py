@@ -12,9 +12,9 @@ class Player(Sprite):
         self.vel_x = 0
         self.vel_y = 0
         self.camera = 0
-        self.image = Surface((35, 35))
+        self.image = Surface((40, 40))
         self.image.fill(Color('Red'))
-        self.rect = Rect(x, y, 35, 35)
+        self.rect = Rect(x, y, 40, 40)
         self.death_pos = (0, 0)
         self.on_ground = False
         self.direction = 'right'
@@ -62,13 +62,16 @@ class Player(Sprite):
         platforms, score = self.collision(0, self.vel_y, platforms, score)
         self.rect.x += self.vel_x
         platforms, score = self.collision(self.vel_x, 0, platforms, score)
-        self.entity_collision(self.vel_x, self.vel_y, entities)
-        camera = (-self.rect.x + 320, -self.rect.y + 240)
+        score = self.entity_collision(self.vel_x, self.vel_y, entities, score)
+        camera = (-self.rect.x + 320, -self.rect.y + 325)
         return platforms, score, camera
 
     def collision(self, vel_x, vel_y, platforms, score):
         for p in platforms:
             if sprite.collide_rect(self, p[0]):
+                if p[1] == '/':
+                    self.state = 'dead'
+                    self.death_pos = (self.rect.x, self.rect.y)
                 if vel_x > 0 and p[1] != 'p':
                     self.rect.right = p[0].rect.left
                     self.vel_x = 0
@@ -76,9 +79,10 @@ class Player(Sprite):
                     self.rect.left = p[0].rect.right
                     self.vel_x = 0
                 if vel_y > 0:
-                    self.rect.bottom = p[0].rect.top
-                    self.on_ground = True
-                    self.vel_y = 0
+                    if self.rect.bottom <= p[0].rect.bottom:
+                        self.rect.bottom = p[0].rect.top
+                        self.on_ground = True
+                        self.vel_y = 0
                 if vel_y < 0 and p[1] != 'p':
                     self.rect.top = p[0].rect.bottom
                     self.vel_y = 0
@@ -90,15 +94,16 @@ class Player(Sprite):
             self.on_ground = False
         return platforms, score
 
-    def entity_collision(self, vel_x, vel_y, entities):
+    def entity_collision(self, vel_x, vel_y, entities, score):
         for p in entities:
             if sprite.collide_rect(self, p):
                 if vel_y > 0:
                     if p.type in ('deadly', 'hid', 'mv') and self.state == 'regular' and self.vel_y not in (0, 0.5, 1):
-                        self.vel_y -= 15
+                        self.vel_y = -5
+                        score += 100
                         if p.name == 'g':
                             p.type = 'dead'
-                        elif p.name == 'k' and p.type == 'deadly':
+                        elif p.name == 'k' and p.type in ('deadly', 'mv'):
                             p.type = 'hid'
                             p.vel_x = 0
                         else:
@@ -125,14 +130,17 @@ class Player(Sprite):
                         self.death_pos = (self.rect.x, self.rect.y)
                     else:
                         pass
+        return score
 
     def death_animation(self):
         if self.frame == 0:
-            self.vel_y -= 15
+            self.vel_y = 0
             self.rect.x, self.rect.y = self.death_pos[0], self.death_pos[1]
+            self.vel_y = -15
         if self.frame > 1:
             self.vel_y += 1.35
             self.rect.y += self.vel_y
-        if self.frame == 30:
-            print('a')
+        if self.frame == 35:
+            return True
         self.frame += 1
+        return False

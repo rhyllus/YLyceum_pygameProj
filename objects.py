@@ -1,5 +1,5 @@
 from pygame.sprite import Sprite
-from pygame import Surface, image
+from pygame import Surface, image, transform
 from pygame import Color
 from pygame import Rect
 
@@ -26,11 +26,13 @@ class MovingPlatform(Sprite):
 
 
 class CoinBox(Sprite):
-    def __init__(self, x, y, tile=None):
+    def __init__(self, x, y):
         Sprite.__init__(self)
-        if tile is not None:
-            self.image = image.load(tile)
-        else:
-            self.image = Surface((40, 40))
-            self.image.fill((210, 60, 60))
+        self.image = image.load('sprites/coin1.png').convert()
+        self.image = transform.scale(self.image, (40, 40))
         self.rect = Rect(x, y, 40, 40)
+
+    def update(self, state):
+        if state == 0:
+            self.image = image.load('sprites/coin2.png').convert()
+            self.image = transform.scale(self.image, (40, 40))
