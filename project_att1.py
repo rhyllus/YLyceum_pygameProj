@@ -1,7 +1,7 @@
 import pygame
 from player import Player
-from objects import CoinBox, MovingPlatform
-from enemies import Goomba, KoopaTroopa
+from objects import CoinBox, MovingPlatform, GoalPole, Decoration
+from enemies import Goomba, KoopaTroopa, MagicMushroom
 
 size_w = (640, 480)
 size_lv = (9000, 480)
@@ -26,7 +26,7 @@ class Platform(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, 40, 40)
 
 
-def build_stage(level):
+def build_stage(level, current):
     global camera_border_x_left, camera_border_y_up, camera_border_x_right, camera_border_y_down
     x = 0
     y = 0
@@ -47,11 +47,11 @@ def build_stage(level):
             elif j == 'g':
                 pl = Goomba(x, y)
                 enemies.append(pl)
-                entities.add(pl)
+                enemies2.add(pl)
             elif j == 'k':
                 pl = KoopaTroopa(x, y)
                 enemies.append(pl)
-                entities.add(pl)
+                enemies2.add(pl)
             elif j == 'X':
                 camera_border_x_left = x
             elif j == 'Y':
@@ -66,9 +66,41 @@ def build_stage(level):
             elif j == 'b':
                 pl = Platform(x, y)
                 objects.append((pl, '0', 1))
+            elif j == 'f':
+                pl = GoalPole(x, y)
+                objects.append((pl, 'f', 1))
+                entities.add(pl)
+            elif j == 'c':
+                pl = Decoration(x, y, 'sprites/cloud1.png')
+                entities.add(pl)
+            elif j == 'B':
+                pl = Decoration(x, y, 'sprites/bush1.png')
+                entities.add(pl)
+            elif j == '}':
+                pl = Decoration(x, y, 'sprites/bush3.png')
+                entities.add(pl)
+            elif j == '{':
+                pl = Decoration(x, y, 'sprites/bush2.png')
+                entities.add(pl)
+            elif j == 'm':
+                pl = MagicMushroom(x, y)
+                enemies.append(pl)
+                enemies2.add(pl)
             x += 40
         y += 40
         x = 0
+    return current
+
+
+def num_converter(num):
+    result1 = 1
+    result2 = 0
+    for i in range(num):
+        result2 += 1
+        if result2 == 4:
+            result1 += 1
+            result2 = 1
+    return '{}-{}.txt'.format(result1, result2)
 
 
 def load_level(filename):
@@ -91,16 +123,14 @@ def obj_update(objs):
 
 objects = []
 enemies = []
-level = load_level('1-1.txt')
-
 player = Player(440, 440)
 entities = pygame.sprite.Group()
-entities.add(player)
+enemies2 = pygame.sprite.Group()
 score = 0
-current = ''
+current = 1
+built = 0
 camera = (0, 0)
 font = pygame.font.SysFont(None, 50)
-build_stage(level)
 left = right = jump = run = False
 clock = pygame.time.Clock()
 while running:
@@ -131,13 +161,13 @@ while running:
             if event.key == 304:
                 run = False
     screen.fill((107, 140, 255))
-    for enemy in enemies:
-        if enemy.type == 'dead':
-            entities.remove(enemy)
-        elif abs(abs(enemy.rect.x) - abs(player.rect.x)) < 400:
-            enemy.move(objects)
-            if enemy.type == 'mv':
-                score = enemy.entity_collision(enemy.vel_x, enemies, score)
+    if built != current:
+        enemies.clear()
+        score = 0
+        entities = pygame.sprite.Group()
+        objects.clear()
+        player = Player(440, 440)
+        built = build_stage(load_level(num_converter(current)), current)
     if player.state == 'dead':
         if player.death_animation():
             enemies.clear()
@@ -145,21 +175,34 @@ while running:
             entities = pygame.sprite.Group()
             objects.clear()
             player = Player(440, 440)
-            entities.add(player)
-            build_stage(level)
+            build_stage(load_level(num_converter(current)), current)
     else:
-        objects, score, camera = player.move(objects, score, enemies)
+        objects, score, camera, current = player.move(objects, score, enemies, current)
         player.update(left, right, run)
     objects = obj_update(objects)
+    for enemy in enemies:
+        if enemy.type == 'dead':
+            entities.remove(enemy)
+        elif abs(abs(enemy.rect.x) - abs(player.rect.x)) < 400:
+            enemy.move(objects)
+            if enemy.type == 'mv':
+                score = enemy.entity_collision(enemy.vel_x, enemies, score, enemies2)
+            if enemy.name == '0':
+                enemies.remove(enemy)
+                enemies2.remove(enemy)
+                player.image = pygame.Surface((40, 80))
+                player.rect.y += 40
+                player.state = 'big'
     entities.draw(screen)
+    enemies2.draw(screen)
     text_str = 'Score: {}'.format(score)
     text = font.render(text_str, 1, (0, 0, 0))
     if player.state != 'dead':
         text_x = -camera[0] + 465
         text_y = 10
     screen.blit(text, (text_x, text_y))
+    screen.blit(player.image, (player.rect.x, player.rect.y))
     window.blit(screen, (camera[0], 0))
     clock.tick(60)
     pygame.display.flip()
-
 pygame.quit()

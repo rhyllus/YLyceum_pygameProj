@@ -36,3 +36,20 @@ class CoinBox(Sprite):
         if state == 0:
             self.image = image.load('sprites/coin2.png').convert()
             self.image = transform.scale(self.image, (40, 40))
+
+
+class GoalPole(Sprite):
+    def __init__(self, x, y):
+        Sprite.__init__(self)
+        self.image = image.load('sprites/flag.png').convert()
+        self.image = transform.scale(self.image, (50, 300))
+        self.rect = Rect(x - 10, y, 20, 290)
+
+
+class Decoration(Sprite):
+    def __init__(self, x, y, sprite):
+        Sprite.__init__(self)
+        self.image = image.load(sprite).convert()
+        a = self.image.get_rect()
+        self.image = transform.scale(self.image, (a[2] * 2, a[3] * 2))
+        self.rect = Rect(x, y + 10, 0, 0)

@@ -57,21 +57,23 @@ class Player(Sprite):
         else:
             self.vel_y = 0
 
-    def move(self, platforms, score, entities):
+    def move(self, platforms, score, entities, current):
         self.rect.y += self.vel_y
-        platforms, score = self.collision(0, self.vel_y, platforms, score)
+        platforms, score, current = self.collision(0, self.vel_y, platforms, score, current)
         self.rect.x += self.vel_x
-        platforms, score = self.collision(self.vel_x, 0, platforms, score)
+        platforms, score, current = self.collision(self.vel_x, 0, platforms, score, current)
         score = self.entity_collision(self.vel_x, self.vel_y, entities, score)
         camera = (-self.rect.x + 320, -self.rect.y + 325)
-        return platforms, score, camera
+        return platforms, score, camera, current
 
-    def collision(self, vel_x, vel_y, platforms, score):
+    def collision(self, vel_x, vel_y, platforms, score, current):
         for p in platforms:
             if sprite.collide_rect(self, p[0]):
                 if p[1] == '/':
                     self.state = 'dead'
                     self.death_pos = (self.rect.x, self.rect.y)
+                if p[1] == 'f':
+                    current += 1
                 if vel_x > 0 and p[1] != 'p':
                     self.rect.right = p[0].rect.left
                     self.vel_x = 0
@@ -92,13 +94,16 @@ class Player(Sprite):
                             platforms[platforms.index(p)] = (p[0], p[1], 0)
         else:
             self.on_ground = False
-        return platforms, score
+        return platforms, score, current
 
     def entity_collision(self, vel_x, vel_y, entities, score):
         for p in entities:
             if sprite.collide_rect(self, p):
+                if p.name == 'm':
+                    p.name = '0'
                 if vel_y > 0:
-                    if p.type in ('deadly', 'hid', 'mv') and self.state == 'regular' and self.vel_y not in (0, 0.5, 1):
+                    if p.type in ('deadly', 'hid', 'mv') and self.state == 'regular' and self.vel_y not in (
+                            0, 0.5, 1):
                         self.vel_y = -5
                         score += 100
                         if p.name == 'g':

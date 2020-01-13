@@ -21,17 +21,17 @@ class Goomba(Sprite):
     def update(self):
         if self.state == 'falling' and self.last_state == 'left':
             self.vel_y += 0.5
-            if self.type == 'deadly':
+            if self.type in ('deadly', 'mov'):
                 self.vel_x = -2
             elif self.type == 'mv':
                 self.vel_x = -10
         if self.state == 'falling' and self.last_state == 'right':
             self.vel_y += 0.5
-            if self.type == 'deadly':
+            if self.type in ('deadly', 'mov'):
                 self.vel_x = 2
             elif self.type == 'mv':
                 self.vel_x = 10
-        if self.type == 'deadly':
+        if self.type in ('deadly', 'mov'):
             if self.state == 'left':
                 self.vel_x = -2
                 self.last_state = 'left'
@@ -67,6 +67,8 @@ class Goomba(Sprite):
                     self.last_state = 'right'
                     self.vel_x = 0
                 if vel_y > 0:
+                    if p[1] == '/':
+                        self.type = 'dead'
                     self.rect.bottom = p[0].rect.top
                     self.state = self.last_state
                     self.vel_y = 0
@@ -82,12 +84,6 @@ class KoopaTroopa(Goomba):
         Goomba.__init__(self, x, y)
         self.name = 'k'
         self.image.fill(Color('Green'))
-
-    def move(self, platforms):
-        self.update()
-        self.collision(0, self.vel_y, platforms)
-        self.rect.x += self.vel_x
-        self.collision(self.vel_x, 0, platforms)
 
     def entity_collision(self, vel_x, entities, score):
         for p in entities:
@@ -105,3 +101,23 @@ class KoopaTroopa(Goomba):
                     else:
                         pass
         return score
+
+
+class MagicMushroom(Goomba):
+    def __init__(self, x, y):
+        Sprite.__init__(self)
+        self.last_state = 'right'
+        self.state = 'right'
+        self.type = 'mov'
+        self.name = 'm'
+        self.vel_y = 0
+        self.vel_x = 0
+        self.image = Surface((40, 40))
+        self.image.fill(Color('Red'))
+        self.rect = Rect(x, y, 40, 40)
+
+    def move(self, platforms):
+        self.update()
+        self.collision(0, self.vel_y, platforms)
+        self.rect.x += self.vel_x
+        self.collision(self.vel_x, 0, platforms)
