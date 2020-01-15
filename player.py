@@ -1,9 +1,8 @@
-from pygame.sprite import Sprite
-
-from pygame import Surface
 from pygame import Color
 from pygame import Rect
+from pygame import Surface
 from pygame import sprite
+from pygame.sprite import Sprite
 
 
 class Player(Sprite):
@@ -57,16 +56,18 @@ class Player(Sprite):
         else:
             self.vel_y = 0
 
-    def move(self, platforms, score, entities, current):
+    def move(self, platforms, score, entities, current, entities2, sprites):
         self.rect.y += self.vel_y
-        platforms, score, current = self.collision(0, self.vel_y, platforms, score, current)
+        platforms, score, current, entities2, sprites = self.collision(0, self.vel_y, platforms, score, current,
+                                                                       entities2, sprites)
         self.rect.x += self.vel_x
-        platforms, score, current = self.collision(self.vel_x, 0, platforms, score, current)
+        platforms, score, current, entities2, sprites = self.collision(self.vel_x, 0, platforms, score, current,
+                                                                       entities2, sprites)
         score = self.entity_collision(self.vel_x, self.vel_y, entities, score)
         camera = (-self.rect.x + 320, -self.rect.y + 325)
-        return platforms, score, camera, current
+        return platforms, score, camera, current, entities
 
-    def collision(self, vel_x, vel_y, platforms, score, current):
+    def collision(self, vel_x, vel_y, platforms, score, current, entities, sprites):
         for p in platforms:
             if sprite.collide_rect(self, p[0]):
                 if p[1] == '/':
@@ -88,13 +89,18 @@ class Player(Sprite):
                 if vel_y < 0 and p[1] != 'p':
                     self.rect.top = p[0].rect.bottom
                     self.vel_y = 0
-                    if p[1] == 's' and vel_y < 0:
+                    if p[1] == 's':
                         if p[2] == 1:
                             score += 100
                             platforms[platforms.index(p)] = (p[0], p[1], 0)
+                    if p[1] == 'M':
+                        if p[2] == 1:
+                            sprites.add(p[0])
+                            entities.append(p[0])
+                            platforms[platforms.index(p)] = (p[0], p[1], 0)
         else:
             self.on_ground = False
-        return platforms, score, current
+        return platforms, score, current, entities, sprites
 
     def entity_collision(self, vel_x, vel_y, entities, score):
         for p in entities:

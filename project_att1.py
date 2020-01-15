@@ -1,6 +1,6 @@
 import pygame
 from player import Player
-from objects import CoinBox, MovingPlatform, GoalPole, Decoration
+from objects import CoinBox, MovingPlatform, GoalPole, Decoration, MushroomBox
 from enemies import Goomba, KoopaTroopa, MagicMushroom
 
 size_w = (640, 480)
@@ -86,6 +86,10 @@ def build_stage(level, current):
                 pl = MagicMushroom(x, y)
                 enemies.append(pl)
                 enemies2.add(pl)
+            elif j == 'M':
+                pl = MushroomBox(x, y)
+                objects.append((pl, 'M', 1))
+                enemies2.add(pl)
             x += 40
         y += 40
         x = 0
@@ -137,7 +141,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if player.state == 'regular':
+        if player.state != 'dead':
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     left = True
@@ -177,7 +181,8 @@ while running:
             player = Player(440, 440)
             build_stage(load_level(num_converter(current)), current)
     else:
-        objects, score, camera, current = player.move(objects, score, enemies, current)
+        objects, score, camera, current, entities, enemies2 = player.move(objects, score, enemies, current, entities,
+                                                                          enemies2)
         player.update(left, right, run)
     objects = obj_update(objects)
     for enemy in enemies:
@@ -190,9 +195,10 @@ while running:
             if enemy.name == '0':
                 enemies.remove(enemy)
                 enemies2.remove(enemy)
-                player.image = pygame.Surface((40, 80))
-                player.rect.y += 40
+                player.image = pygame.Surface((40, 65))
+                player.image.fill(pygame.Color('Red'))
                 player.state = 'big'
+                player.rect = pygame.Rect(player.rect.x, player.rect.y, 40, 65)
     entities.draw(screen)
     enemies2.draw(screen)
     text_str = 'Score: {}'.format(score)

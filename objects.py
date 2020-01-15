@@ -53,3 +53,8 @@ class Decoration(Sprite):
         a = self.image.get_rect()
         self.image = transform.scale(self.image, (a[2] * 2, a[3] * 2))
         self.rect = Rect(x, y + 10, 0, 0)
+
+
+class MushroomBox(CoinBox):
+    def __init__(self, x, y):
+        CoinBox.__init__(self, x, y)
