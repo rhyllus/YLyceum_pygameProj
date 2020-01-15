@@ -3,6 +3,7 @@ from pygame import Rect
 from pygame import Surface
 from pygame import sprite
 from pygame.sprite import Sprite
+from enemies import MagicMushroom
 
 
 class Player(Sprite):
@@ -56,16 +57,14 @@ class Player(Sprite):
         else:
             self.vel_y = 0
 
-    def move(self, platforms, score, entities, current, entities2, sprites):
+    def move(self, platforms, score, entities, current, sprites):
         self.rect.y += self.vel_y
-        platforms, score, current, entities2, sprites = self.collision(0, self.vel_y, platforms, score, current,
-                                                                       entities2, sprites)
+        platforms, score, current, entities, sprites = self.collision(0, self.vel_y, platforms, score, current, entities, sprites)
         self.rect.x += self.vel_x
-        platforms, score, current, entities2, sprites = self.collision(self.vel_x, 0, platforms, score, current,
-                                                                       entities2, sprites)
+        platforms, score, current, entities2, sprites = self.collision(self.vel_x, 0, platforms, score, current, entities, sprites)
         score = self.entity_collision(self.vel_x, self.vel_y, entities, score)
         camera = (-self.rect.x + 320, -self.rect.y + 325)
-        return platforms, score, camera, current, entities
+        return platforms, score, camera, current, entities, sprites
 
     def collision(self, vel_x, vel_y, platforms, score, current, entities, sprites):
         for p in platforms:
@@ -95,8 +94,9 @@ class Player(Sprite):
                             platforms[platforms.index(p)] = (p[0], p[1], 0)
                     if p[1] == 'M':
                         if p[2] == 1:
-                            sprites.add(p[0])
-                            entities.append(p[0])
+                            pl = MagicMushroom(p[0].rect.x, p[0].rect.y - 40)
+                            sprites.add(pl)
+                            entities.append(pl)
                             platforms[platforms.index(p)] = (p[0], p[1], 0)
         else:
             self.on_ground = False

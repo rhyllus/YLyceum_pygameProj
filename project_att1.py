@@ -89,7 +89,7 @@ def build_stage(level, current):
             elif j == 'M':
                 pl = MushroomBox(x, y)
                 objects.append((pl, 'M', 1))
-                enemies2.add(pl)
+                entities.add(pl)
             x += 40
         y += 40
         x = 0
@@ -181,8 +181,8 @@ while running:
             player = Player(440, 440)
             build_stage(load_level(num_converter(current)), current)
     else:
-        objects, score, camera, current, entities, enemies2 = player.move(objects, score, enemies, current, entities,
-                                                                          enemies2)
+        objects, score, camera, current, enemies, enemies2 = player.move(objects, score, enemies,
+                                                                         current, enemies2)
         player.update(left, right, run)
     objects = obj_update(objects)
     for enemy in enemies:
@@ -197,14 +197,17 @@ while running:
                 enemies2.remove(enemy)
                 player.image = pygame.Surface((40, 65))
                 player.image.fill(pygame.Color('Red'))
-                player.state = 'big'
+                if player.state == 'big':
+                    score += 1000
+                else:
+                    player.state = 'big'
                 player.rect = pygame.Rect(player.rect.x, player.rect.y, 40, 65)
     entities.draw(screen)
     enemies2.draw(screen)
     text_str = 'Score: {}'.format(score)
     text = font.render(text_str, 1, (0, 0, 0))
     if player.state != 'dead':
-        text_x = -camera[0] + 465
+        text_x = -camera[0] + 400
         text_y = 10
     screen.blit(text, (text_x, text_y))
     screen.blit(player.image, (player.rect.x, player.rect.y))
