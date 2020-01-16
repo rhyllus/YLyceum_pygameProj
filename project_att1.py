@@ -188,6 +188,7 @@ while running:
     for enemy in enemies:
         if enemy.type == 'dead':
             entities.remove(enemy)
+            enemies2.remove(enemy)
         elif abs(abs(enemy.rect.x) - abs(player.rect.x)) < 400:
             enemy.move(objects)
             if enemy.type == 'mv':

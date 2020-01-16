@@ -108,7 +108,7 @@ class Player(Sprite):
                 if p.name == 'm':
                     p.name = '0'
                 if vel_y > 0:
-                    if p.type in ('deadly', 'hid', 'mv') and self.state == 'regular' and self.vel_y not in (
+                    if p.type in ('deadly', 'hid', 'mv') and self.state != 'dead' and self.vel_y not in (
                             0, 0.5, 1):
                         self.vel_y = -5
                         score += 100
